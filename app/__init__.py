@@ -13,6 +13,7 @@ def create_app():
     # --- Init Extensions ---
     db.init_app(app)
     bcrypt.init_app(app)
+    login_manager.login_view = 'auth.login'
     login_manager.init_app(app)
     
     from app.models import User

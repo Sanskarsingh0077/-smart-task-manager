@@ -3,7 +3,8 @@ from app.auth import auth
 from app.auth.forms import RegisterForm
 from app.models import User
 from app.extensions import db, bcrypt
-from flask_login import login_user
+from .forms import LoginForm  
+from flask_login import login_required, logout_user,login_user
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
@@ -31,4 +32,28 @@ def register():
         flash('Account created successfully! 🎉', 'success')
         return redirect(url_for('auth.login'))  # Define login later
 
-    return render_template('templates/auth/register.html', form=form)
+    return render_template('auth/register.html', form=form)
+
+@auth.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+
+        if user and bcrypt.check_password_hash(user.password, form.password.data):
+            login_user(user)
+            flash('Logged in successfully.', 'success')
+            return redirect(url_for('main.dashboard'))  # 👈 send to dashboard
+        else:
+            flash('Invalid email or password.', 'danger')
+
+    return render_template('auth/login.html', form=form)
+
+
+@auth.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Logged out successfully!', 'info')
+    return redirect(url_for('auth.login'))
